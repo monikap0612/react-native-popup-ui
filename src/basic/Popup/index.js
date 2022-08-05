@@ -29,11 +29,17 @@ class Popup extends Component {
 			icon: config.icon !== undefined ? config.icon : false,
 			textBody: config.textBody,
 			button: config.button !== undefined ? config.button : true,
+			cancellable: config.cancellable || false,
 			buttonText: config.buttonText || 'Ok',
 			callback: config.callback !== undefined ? config.callback : this.defaultCallback(),
+			cancelCallback: config.cancelCallback || this.defaultCancelCallback,
+			cancelText: config.cancelText || 'Cancel',
 			background: config.background || 'rgba(0, 0, 0, 0.5)',
 			timing: config.timing,
-			autoClose: config.autoClose !== undefined ? config.autoClose : false
+			autoClose: config.autoClose !== undefined ? config.autoClose : false,
+			popUpBG: config.popUpBG !== undefined ? config.popUpBG : 'white',
+			titleStyle: config.titleStyle, 
+			descStyle: config.descStyle
 		})
 
 		Animated.sequence([
@@ -92,6 +98,10 @@ class Popup extends Component {
 		)
 	}
 
+	defaultCancelCallback(){
+		this.hidePopup();
+	}
+
 	handleImage(type) {
 		switch (type) {
 			case 'Success': return require('../../assets/Success.png')
@@ -101,12 +111,19 @@ class Popup extends Component {
 	}
 
 	render() {
-		const { title, type, textBody, button, buttonText, callback, background } = this.state
+		const { title, type, textBody, button, buttonText, callback, background, popUpBG, titleStyle, descStyle, cancellable, cancelCallback, cancelText } = this.state
 		let el = null;
-		if (this.state.button) {
-			el = <TouchableOpacity style={[styles.Button, styles[type]]} onPress={callback}>
+		if (button) {
+			el = <View>
+			<TouchableOpacity style={[styles.Button, styles[type]]} onPress={callback}>
 				<Text style={styles.TextButton}>{buttonText}</Text>
 			</TouchableOpacity>
+			{cancellable && 
+				<TouchableOpacity style={styles.CancelStyle} onPress={cancelCallback}>
+					<Text style={styles.TextCancel}>{cancelText}</Text>
+				</TouchableOpacity>
+			}
+		</View>
 		}
 		else {
 			el = <Text></Text>
@@ -126,13 +143,14 @@ class Popup extends Component {
 						this.setState({ popupHeight: event.nativeEvent.layout.height })
 					}}
 					style={[styles.Message, {
+						backgroundColor: popUpBG,
 						transform: [
 							{ translateY: this.state.positionPopup }
 						]
 					}]}
 
 				>
-					<View style={styles.Header} />
+					<View style={[styles.Header, { backgroundColor: popUpBG }]} />
 					{
 						this.state.icon ? (this.state.icon) :
 							<Image
@@ -142,8 +160,8 @@ class Popup extends Component {
 							/>
 					}
 					<View style={styles.Content}>
-						<Text style={styles.Title}>{title}</Text>
-						<Text style={styles.Desc}>{textBody}</Text>
+						<Text style={[styles.Title, { ...titleStyle}]}>{title}</Text>
+						<Text style={[styles.Desc, { ...descStyle}]}>{textBody}</Text>
 						{el}
 					</View>
 				</Animated.View>
@@ -244,6 +262,15 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.36,
 		shadowRadius: 6.68,
 		elevation: 11
+	},
+	CancelStyle: {
+		marginTop: 10,
+		height: 40,
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	TextCancel: {
+		fontWeight: "bold",
 	}
 })
 
